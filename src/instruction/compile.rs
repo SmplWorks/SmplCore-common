@@ -6,6 +6,7 @@ impl Instruction {
 
         match self {
             Nop => vec![self.opcode(), 0x00],
+            DB(_) => vec![self.opcode()],
 
             MovC2R(value, dest) => match value.width() {
                 Width::Byte => vec![self.opcode(), value.value_byte(0) | dest.compile_dest()],
@@ -44,6 +45,12 @@ mod test {
     fn nop() {
         let inst = Instruction::nop();
         assert_eq!(inst.compile(), vec![inst.opcode(), 0x00]);
+    }
+
+    #[test]
+    fn db() {
+        let inst = Instruction::db(0xF3);
+        assert_eq!(inst.compile(), vec![inst.opcode()]);
     }
 
     #[test]

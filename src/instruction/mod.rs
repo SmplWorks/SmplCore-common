@@ -6,6 +6,9 @@ pub enum Instruction {
     /// No operation
     Nop,
 
+    /// Pseudo instruction corresponding to a literal byte
+    DB(u8),
+
     // Memory manipulation
     /// Move constant to register
     MovC2R(Value, Register), 
@@ -43,6 +46,10 @@ macro_rules! inst_const {
 impl Instruction {
     pub fn nop() -> Self {
         Self::Nop
+    }
+
+    pub fn db(value : u8) -> Self {
+        Self::DB(value)
     }
 
     pub fn movc2r(value : Value, dest : Register) -> Result<Self> {
@@ -92,6 +99,7 @@ impl Instruction {
 
         match self {
             Nop => 0x00,
+            DB(value) => *value,
 
             MovC2R(value, _) => case!(value, 0x01),
             MovR2R(src, _) => case!(src, 0x03),
