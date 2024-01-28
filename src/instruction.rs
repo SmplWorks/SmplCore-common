@@ -27,6 +27,19 @@ pub enum Instruction {
     Sub(Register, Register),
 }
 
+macro_rules! inst_const {
+    ($ident:ident, $variant:ident) => {
+        pub fn $ident(src : Register, dest : Register) -> Result<Self> {
+            let res = Self::MovR2R(src, dest);
+            if src.width() == dest.width() {
+                Ok(res)
+            } else {
+                Err(Error::OperandWidthMismatch(res))
+            }
+        }
+    };
+}
+
 impl Instruction {
     pub fn nop() -> Self {
         Self::Nop
@@ -41,14 +54,7 @@ impl Instruction {
         }
     }
 
-    pub fn movr2r(src : Register, dest : Register) -> Result<Self> {
-        let res = Self::MovR2R(src, dest);
-        if src.width() == dest.width() {
-            Ok(res)
-        } else {
-            Err(Error::OperandWidthMismatch(res))
-        }
-    }
+    inst_const!(movr2r, MovR2R);
 
     pub fn movm2r(src : Register, dest : Register) -> Result<Self> {
         let res = Self::MovM2R(src, dest);
@@ -68,23 +74,8 @@ impl Instruction {
         }
     }
 
-    pub fn add(src : Register, dest : Register) -> Result<Self> {
-        let res = Self::Add(src, dest);
-        if src.width() == dest.width() {
-            Ok(res)
-        } else {
-            Err(Error::OperandWidthMismatch(res))
-        }
-    }
-
-    pub fn sub(src : Register, dest : Register) -> Result<Self> {
-        let res = Self::Sub(src, dest);
-        if src.width() == dest.width() {
-            Ok(res)
-        } else {
-            Err(Error::OperandWidthMismatch(res))
-        }
-    }
+    inst_const!(add, Add);
+    inst_const!(sub, Sub);
 
     pub fn opcode(&self) -> u8 {
         use Instruction::*;
@@ -107,12 +98,24 @@ mod test {
     use super::*;
 
     #[test]
-    fn all_different_opcodes() {
-        use crate::Width;
+    fn check_widths_c2r() {
+        assert!(Instruction::movc2r(Value::byte(0), Register::rb0()).is_ok());
+        assert!(Instruction::movc2r(Value::word(0), Register::r0()).is_ok());
+        assert_eq!(Instruction::movc2r(Value::byte(0), Register::r0()), Err(Error::OperandWidthMismatch(Instruction::MovC2R(Value::byte(0), Register::r0()))));
+        assert_eq!(Instruction::movc2r(Value::word(0), Register::rb0()), Err(Error::OperandWidthMismatch(Instruction::MovC2R(Value::word(0), Register::rb0()))));
+    }
 
-        macro_rules! case {
-            ($var:ident, $width:ident) => {
-                Instruction::$var(Register::r(Width::$width, 1).unwrap(), Register::r(Width::$width, 1).unwrap()).unwrap()
+    #[test]
+    fn all_different_opcodes() {
+        macro_rules! b2b {
+            ($ident:ident) => {
+                Instruction::$ident(Register::rb0(), Register::rb1()).unwrap()
+            };
+        }
+
+        macro_rules! w2w {
+            ($ident:ident) => {
+                Instruction::$ident(Register::r0(), Register::r1()).unwrap()
             };
         }
 
@@ -120,19 +123,17 @@ mod test {
         let all = vec![
             Instruction::nop(),
 
-            Instruction::movc2r(Value::byte(1), Register::r(Width::Byte, 0).unwrap()).unwrap(),
-            Instruction::movc2r(Value::word(1), Register::r(Width::Word, 0).unwrap()).unwrap(),
-            case!(movr2r, Byte),
-            case!(movr2r, Word),
-            case!(movm2r, Byte),
-            case!(movm2r, Word),
-            case!(movr2m, Byte),
-            case!(movr2m, Word),
+            Instruction::movc2r(Value::byte(1), Register::rb0()).unwrap(),
+            Instruction::movc2r(Value::word(1), Register::r0()).unwrap(),
+            b2b!(movr2r),
+            w2w!(movr2r),
+            Instruction::movm2r(Register::r0(), Register::rb1()).unwrap(),
+            Instruction::movr2m(Register::rb0(), Register::r1()).unwrap(),
 
-            case!(add, Byte),
-            case!(add, Word),
-            case!(sub, Byte),
-            case!(sub, Word),
+            b2b!(add),
+            w2w!(add),
+            b2b!(sub),
+            w2w!(sub),
         ];
 
         for inst0 in all.iter() {
