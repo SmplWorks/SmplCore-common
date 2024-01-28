@@ -37,11 +37,7 @@ macro_rules! inst_const {
     ($ident:ident, $variant:ident) => {
         pub fn $ident(src : Register, dest : Register) -> Result<Self> {
             let res = Self::$variant(src, dest);
-            if src.width() == dest.width() && dest.is_writable() {
-                Ok(res)
-            } else {
-                Err(Error::OperandWidthMismatch(res))
-            }
+            res.is_valid().then_some(res).ok_or(Error::OperandWidthMismatch(res))
         }
     };
 }
@@ -57,42 +53,34 @@ impl Instruction {
 
     pub fn movc2r(value : Value, dest : Register) -> Result<Self> {
         let res = Self::MovC2R(value, dest);
-        if value.width() == dest.width() && dest.is_writable() {
-            Ok(res)
-        } else {
-            Err(Error::OperandWidthMismatch(res))
-        }
+        res.is_valid().then_some(res).ok_or(Error::OperandWidthMismatch(res))
     }
 
     inst_const!(movr2r, MovR2R);
-
-    pub fn movm2r(src : Register, dest : Register) -> Result<Self> {
-        let res = Self::MovM2R(src, dest);
-        if src.width() == Width::Word && dest.width() == Width::Byte && dest.is_writable() {
-            Ok(res)
-        } else {
-            Err(Error::OperandWidthMismatch(res))
-        }
-    }
-
-    pub fn movr2m(src : Register, dest : Register) -> Result<Self> {
-        let res = Self::MovR2M(src, dest);
-        if src.width() == Width::Byte && dest.width() == Width::Word && dest.is_writable() {
-            Ok(res)
-        } else {
-            Err(Error::OperandWidthMismatch(res))
-        }
-    }
-
+    inst_const!(movm2r, MovM2R);
+    inst_const!(movr2m, MovR2M);
     inst_const!(add, Add);
     inst_const!(sub, Sub);
 
     pub fn jmp(reg : Register) -> Result<Self> {
         let res = Self::Jmp(reg);
-        if reg.width() == Width::Word {
-            Ok(res)
-        } else {
-            Err(Error::OperandWidthMismatch(res))
+        res.is_valid().then_some(res).ok_or(Error::OperandWidthMismatch(res))
+    }
+
+    pub fn is_valid(&self) -> bool {
+        use Instruction::*;
+        match self {
+            Nop => true,
+            DB(_) => true, // TODO: Should this always be true?
+
+            MovC2R(value, dest) => value.width() == dest.width() && dest.is_writable(),
+            MovM2R(src, dest) => src.width() == Width::Word && dest.width() == Width::Byte && dest.is_writable(),
+            MovR2M(src, dest) => src.width() == Width::Byte && dest.width() == Width::Word && dest.is_writable(),
+
+            MovR2R(src, dest) | Add(src, dest) | Sub(src, dest)
+                => src.width() == dest.width() && dest.is_writable(),
+
+            Jmp(reg) => reg.width() == Width::Word,
         }
     }
 
