@@ -1,3 +1,4 @@
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Register {
     /// CPU information flags, 16-bits
     RINFO,

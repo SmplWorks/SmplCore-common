@@ -1,5 +1,6 @@
 use crate::{Register, Value};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Instruction {
     // Misc
     /// No operation
