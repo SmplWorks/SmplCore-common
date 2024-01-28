@@ -63,6 +63,14 @@ impl Register {
         }
     }
 
+    pub fn is_writable(&self) -> bool {
+        use Register::*;
+        match self {
+            RINFO | RIP | RINT | Flags => false,
+            R(_, _) => true,
+        }
+    }
+
     pub fn compile_src(&self) -> u8 {
         use Register::*;
         match self {

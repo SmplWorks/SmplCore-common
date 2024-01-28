@@ -31,7 +31,7 @@ macro_rules! inst_const {
     ($ident:ident, $variant:ident) => {
         pub fn $ident(src : Register, dest : Register) -> Result<Self> {
             let res = Self::$variant(src, dest);
-            if src.width() == dest.width() {
+            if src.width() == dest.width() && dest.is_writable() {
                 Ok(res)
             } else {
                 Err(Error::OperandWidthMismatch(res))
@@ -47,7 +47,7 @@ impl Instruction {
 
     pub fn movc2r(value : Value, dest : Register) -> Result<Self> {
         let res = Self::MovC2R(value, dest);
-        if value.width() == dest.width() {
+        if value.width() == dest.width() && dest.is_writable() {
             Ok(res)
         } else {
             Err(Error::OperandWidthMismatch(res))
@@ -58,7 +58,7 @@ impl Instruction {
 
     pub fn movm2r(src : Register, dest : Register) -> Result<Self> {
         let res = Self::MovM2R(src, dest);
-        if src.width() == Width::Word && dest.width() == Width::Byte {
+        if src.width() == Width::Word && dest.width() == Width::Byte && dest.is_writable() {
             Ok(res)
         } else {
             Err(Error::OperandWidthMismatch(res))
@@ -67,7 +67,7 @@ impl Instruction {
 
     pub fn movr2m(src : Register, dest : Register) -> Result<Self> {
         let res = Self::MovR2M(src, dest);
-        if src.width() == Width::Byte && dest.width() == Width::Word {
+        if src.width() == Width::Byte && dest.width() == Width::Word && dest.is_writable() {
             Ok(res)
         } else {
             Err(Error::OperandWidthMismatch(res))
