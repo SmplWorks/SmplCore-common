@@ -54,7 +54,7 @@ mod test {
 
         macro_rules! case {
             ($var:ident, $low:literal) => {
-                $var(Register::new_r(0, $low).unwrap(), Register::new_r(1, $low).unwrap())
+                $var(Register::r(0, $low).unwrap(), Register::r(1, $low).unwrap())
             };
         }
 
@@ -62,8 +62,8 @@ mod test {
         let all = vec![
             Nop,
 
-            MovC2R(Value::new_byte(1), Register::new_r(0, true).unwrap()),
-            MovC2R(Value::new_byte(1), Register::new_r(0, false).unwrap()),
+            MovC2R(Value::byte(1), Register::r(0, true).unwrap()),
+            MovC2R(Value::byte(1), Register::r(0, false).unwrap()),
             case!(MovR2R, true),
             case!(MovR2R, false),
             case!(MovM2R, true),

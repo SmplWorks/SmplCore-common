@@ -25,7 +25,7 @@ pub enum Register {
 }
 
 impl Register {
-    pub fn new_r(number : u8, low : bool) -> Result<Self> {
+    pub fn r(number : u8, low : bool) -> Result<Self> {
         if number > 11 {
             return Err(Error::InvalidRegisterNumber(number))
         }
