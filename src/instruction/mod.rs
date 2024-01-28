@@ -104,5 +104,7 @@ impl Instruction {
     }
 }
 
+mod compile;
+
 #[cfg(test)]
 mod test;
