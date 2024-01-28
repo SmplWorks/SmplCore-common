@@ -12,6 +12,8 @@ impl Instruction {
                 Width::Word => vec![self.opcode(), dest.compile_dest(), value.value_byte(0), value.value_byte(1)],
             }
 
+            MovR2R(src, dest) => vec![self.opcode(), src.compile_with(dest)],
+
             _ => todo!(),
         }
     }
@@ -33,5 +35,14 @@ mod test {
 
         let inst = Instruction::movc2r(Value::word(0xF337), Register::r0()).unwrap();
         assert_eq!(inst.compile(), vec![inst.opcode(), Register::r0().compile_dest(), 0x37, 0xF3]);
+    }
+
+    #[test]
+    fn movr2r() {
+        let inst = Instruction::movr2r(Register::rb0(), Register::rb1()).unwrap();
+        assert_eq!(inst.compile(), vec![inst.opcode(), Register::rb0().compile_with(&Register::rb1())]);
+
+        let inst = Instruction::movr2r(Register::r0(), Register::r1()).unwrap();
+        assert_eq!(inst.compile(), vec![inst.opcode(), Register::r0().compile_with(&Register::r1())]);
     }
 }
