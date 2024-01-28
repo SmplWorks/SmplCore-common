@@ -30,7 +30,7 @@ pub enum Instruction {
 macro_rules! inst_const {
     ($ident:ident, $variant:ident) => {
         pub fn $ident(src : Register, dest : Register) -> Result<Self> {
-            let res = Self::MovR2R(src, dest);
+            let res = Self::$variant(src, dest);
             if src.width() == dest.width() {
                 Ok(res)
             } else {
@@ -66,7 +66,7 @@ impl Instruction {
     }
 
     pub fn movr2m(src : Register, dest : Register) -> Result<Self> {
-        let res = Self::MovM2R(src, dest);
+        let res = Self::MovR2M(src, dest);
         if src.width() == Width::Byte && dest.width() == Width::Word {
             Ok(res)
         } else {
@@ -97,6 +97,33 @@ impl Instruction {
 mod test { 
     use super::*;
 
+    macro_rules! check_widths_ok {
+        ($ident:ident, $r0:ident, $r1:ident) => {
+            assert!(Instruction::$ident(Register::$r0(), Register::$r1()).is_ok());
+        };
+    }
+
+    macro_rules! check_widths_err {
+        ($ident:ident, $IDENT:ident, $r0:ident, $r1:ident) => {
+            assert_eq!(
+                Instruction::$ident(Register::$r0(), Register::$r1()), 
+                Err(Error::OperandWidthMismatch(Instruction::$IDENT(Register::$r0(), Register::$r1())))
+            );
+        };
+    }
+
+    macro_rules! check_widths_case {
+        ($name:ident, $ident:ident, $IDENT:ident) => {
+            #[test]
+            fn $ident() {
+                check_widths_ok!($ident, rb0, rb1);
+                check_widths_ok!($ident, r0, r1);
+                check_widths_err!($ident, $IDENT, rb0, r1);
+                check_widths_err!($ident, $IDENT, r0, rb1);
+            }
+        };
+    }
+
     #[test]
     fn check_widths_c2r() {
         assert!(Instruction::movc2r(Value::byte(0), Register::rb0()).is_ok());
@@ -104,6 +131,27 @@ mod test {
         assert_eq!(Instruction::movc2r(Value::byte(0), Register::r0()), Err(Error::OperandWidthMismatch(Instruction::MovC2R(Value::byte(0), Register::r0()))));
         assert_eq!(Instruction::movc2r(Value::word(0), Register::rb0()), Err(Error::OperandWidthMismatch(Instruction::MovC2R(Value::word(0), Register::rb0()))));
     }
+
+    check_widths_case!(check_widths_movr2r, movr2r, MovR2R);
+
+    #[test]
+    fn check_widths_movm2r() {
+        check_widths_ok!(movm2r, r0, rb1);
+        check_widths_err!(movm2r, MovM2R, r0, r1);
+        check_widths_err!(movm2r, MovM2R, rb0, rb1);
+        check_widths_err!(movm2r, MovM2R, rb0, r1);
+    }
+
+    #[test]
+    fn check_widths_movr2m() {
+        check_widths_ok!(movr2m, rb0, r1);
+        check_widths_err!(movr2m, MovR2M, r0, r1);
+        check_widths_err!(movr2m, MovR2M, rb0, rb1);
+        check_widths_err!(movr2m, MovR2M, r0, rb1);
+    }
+
+    check_widths_case!(check_widths_add, add, Add);
+    check_widths_case!(check_widths_sub, sub, Sub);
 
     #[test]
     fn all_different_opcodes() {
