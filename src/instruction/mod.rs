@@ -105,6 +105,7 @@ impl Instruction {
 }
 
 mod compile;
+pub use compile::*;
 
 #[cfg(test)]
 mod test;
