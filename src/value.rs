@@ -1,19 +1,19 @@
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum ValueType {
-    Byte, Word, 
-}
-use ValueType::*;
+use crate::Width;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub struct Value(ValueType, u16);
+pub struct Value(Width, u16);
 
 impl Value {
     pub fn byte(value : u8) -> Self {
-        Self(Byte, value as u16)
+        Self(Width::Byte, value as u16)
     }
 
     pub fn word(value : u16) -> Self {
-        Self(Word, value)
+        Self(Width::Word, value)
+    }
+
+    pub fn width(&self) -> Width {
+        self.0
     }
 }
 

@@ -1,5 +1,5 @@
 mod register;
-pub use register::Register;
+pub use register::{Register, Width};
 
 mod instruction;
 pub use instruction::Instruction;

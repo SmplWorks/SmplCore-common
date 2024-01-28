@@ -1,5 +1,10 @@
 use crate::utils::{Error, Result};
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Width {
+    Byte, Word, 
+}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Register {
     /// CPU information flags, 16-bits
@@ -14,23 +19,25 @@ pub enum Register {
     /// Flags, always 16-bits
     Flags,
 
-    /// General purpose register 16 or 8 bits depending on low
-    R {
-        /// Number, between 0 and 11
-        number: u8,
-
-        /// Is in low mode, only lower 8-bits
-        low: bool
-    },
+    /// General purpose register
+    R(Width, u8),
 }
 
 impl Register {
-    pub fn r(number : u8, low : bool) -> Result<Self> {
+    pub fn r(width : Width, number : u8) -> Result<Self> {
         if number > 11 {
             return Err(Error::InvalidRegisterNumber(number))
         }
 
-        Ok(Self::R { number, low })
+        Ok(Self::R(width, number))
+    }
+
+    pub fn width(&self) -> Width {
+        use Register::*;
+        match self {
+            RINFO | RIP | RINT | Flags => Width::Word,
+            R(w, _) => *w,
+        }
     }
 }
 
@@ -42,7 +49,13 @@ impl std::fmt::Debug for Register {
             RIP => write!(f, "RIP"),
             RINT => write!(f, "RINT"),
             Flags => write!(f, "Flags"),
-            R { number, low } => write!(f, "R{}{}", if *low { "b" } else { "" }, number),
+            R(width, number) => {
+                let middle = match width {
+                    Width::Byte => "b",
+                    Width::Word => "",
+                };
+                write!(f, "R{}{}", middle, number)
+            },
         }
     }
 }

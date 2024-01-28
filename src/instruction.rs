@@ -1,4 +1,4 @@
-use crate::{Register, Value};
+use crate::{utils::{Error, Result}, Register, Value, Width};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Instruction {
@@ -28,6 +28,64 @@ pub enum Instruction {
 }
 
 impl Instruction {
+    pub fn nop() -> Self {
+        Self::Nop
+    }
+
+    pub fn movc2r(value : Value, dest : Register) -> Result<Self> {
+        let res = Self::MovC2R(value, dest);
+        if value.width() == dest.width() {
+            Ok(res)
+        } else {
+            Err(Error::OperandWidthMismatch(res))
+        }
+    }
+
+    pub fn movr2r(src : Register, dest : Register) -> Result<Self> {
+        let res = Self::MovR2R(src, dest);
+        if src.width() == dest.width() {
+            Ok(res)
+        } else {
+            Err(Error::OperandWidthMismatch(res))
+        }
+    }
+
+    pub fn movm2r(src : Register, dest : Register) -> Result<Self> {
+        let res = Self::MovM2R(src, dest);
+        if src.width() == Width::Word && dest.width() == Width::Byte {
+            Ok(res)
+        } else {
+            Err(Error::OperandWidthMismatch(res))
+        }
+    }
+
+    pub fn movr2m(src : Register, dest : Register) -> Result<Self> {
+        let res = Self::MovM2R(src, dest);
+        if src.width() == Width::Byte && dest.width() == Width::Word {
+            Ok(res)
+        } else {
+            Err(Error::OperandWidthMismatch(res))
+        }
+    }
+
+    pub fn add(src : Register, dest : Register) -> Result<Self> {
+        let res = Self::Add(src, dest);
+        if src.width() == dest.width() {
+            Ok(res)
+        } else {
+            Err(Error::OperandWidthMismatch(res))
+        }
+    }
+
+    pub fn sub(src : Register, dest : Register) -> Result<Self> {
+        let res = Self::Sub(src, dest);
+        if src.width() == dest.width() {
+            Ok(res)
+        } else {
+            Err(Error::OperandWidthMismatch(res))
+        }
+    }
+
     pub fn opcode(&self) -> u8 {
         use Instruction::*;
         match self {
@@ -50,31 +108,31 @@ mod test {
 
     #[test]
     fn all_different_opcodes() {
-        use Instruction::*;
+        use crate::Width;
 
         macro_rules! case {
-            ($var:ident, $low:literal) => {
-                $var(Register::r(0, $low).unwrap(), Register::r(1, $low).unwrap())
+            ($var:ident, $width:ident) => {
+                Instruction::$var(Register::r(Width::$width, 1).unwrap(), Register::r(Width::$width, 1).unwrap()).unwrap()
             };
         }
 
         // All instructions
         let all = vec![
-            Nop,
+            Instruction::nop(),
 
-            MovC2R(Value::byte(1), Register::r(0, true).unwrap()),
-            MovC2R(Value::byte(1), Register::r(0, false).unwrap()),
-            case!(MovR2R, true),
-            case!(MovR2R, false),
-            case!(MovM2R, true),
-            case!(MovM2R, false),
-            case!(MovR2M, true),
-            case!(MovR2M, false),
+            Instruction::movc2r(Value::byte(1), Register::r(Width::Byte, 0).unwrap()).unwrap(),
+            Instruction::movc2r(Value::word(1), Register::r(Width::Word, 0).unwrap()).unwrap(),
+            case!(movr2r, Byte),
+            case!(movr2r, Word),
+            case!(movm2r, Byte),
+            case!(movm2r, Word),
+            case!(movr2m, Byte),
+            case!(movr2m, Word),
 
-            case!(Add, true),
-            case!(Add, false),
-            case!(Sub, true),
-            case!(Sub, false),
+            case!(add, Byte),
+            case!(add, Word),
+            case!(sub, Byte),
+            case!(sub, Word),
         ];
 
         for inst0 in all.iter() {
