@@ -1,5 +1,3 @@
-use crate::utils::{Error, Result};
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Width {
     Byte, Word, 

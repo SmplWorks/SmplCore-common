@@ -79,16 +79,27 @@ impl Instruction {
 
     pub fn opcode(&self) -> u8 {
         use Instruction::*;
+        use Width::*;
+
+        macro_rules! case {
+            ($ident:ident, $base:literal) => {
+                match $ident.width() {
+                    Byte => $base,
+                    Word => $base + 1,
+                }
+            };
+        }
+
         match self {
             Nop => 0x00,
 
-            MovC2R(value, dest) => 0x01,
-            MovR2R(src, dest) => 0x02,
-            MovR2M(src, dest) => 0x03,
-            MovM2R(src, dest) => 0x04,
+            MovC2R(value, _) => case!(value, 0x01),
+            MovR2R(src, _) => case!(src, 0x03),
+            MovM2R(_, _) => 0x05,
+            MovR2M(_, _) => 0x06,
 
-            Add(src, dest) => 0x05,
-            Sub(src, dest) => 0x06,
+            Add(src, _) => case!(src, 0x07),
+            Sub(src, _) => case!(src, 0x09),
         }
     }
 }
