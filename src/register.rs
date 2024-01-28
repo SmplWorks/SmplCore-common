@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Register {
     /// CPU information flags, 16-bits
     RINFO,
@@ -20,4 +20,27 @@ pub enum Register {
         /// Is in low mode, only lower 8-bits
         low: bool
     },
+}
+
+impl Register {
+    pub fn new_r(number : u8, low : bool) -> Self {
+        if number > 11 {
+            panic!("Invalid register number: {}", number)
+        }
+
+        Self::R { number, low }
+    }
+}
+
+impl std::fmt::Debug for Register {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use Register::*;
+        match self {
+            RINFO => write!(f, "RINFO"),
+            RIP => write!(f, "RIP"),
+            RINT => write!(f, "RINT"),
+            Flags => write!(f, "Flags"),
+            R { number, low } => write!(f, "R{}{}", if *low { "b" } else { "" }, number),
+        }
+    }
 }

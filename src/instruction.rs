@@ -8,21 +8,21 @@ pub enum Instruction {
 
     // Memory manipulation
     /// Move constant to register
-    MovC2R { value: Value, dest: Register },
+    MovC2R(Value, Register), 
 
     /// Move register to register
-    MovR2R { src: Register, dest: Register },
+    MovR2R(Register, Register),
 
     /// Move from memory to register
-    MovM2R { src: Register, dest: Register },
+    MovM2R(Register, Register),
 
     /// Move from register to memory
-    MovR2M { src: Register, dest: Register },
+    MovR2M(Register, Register),
     
     // Arithmetic
     /// Add two registers
-    Add { src: Register, dest: Register },
+    Add(Register, Register),
 
     /// Subtract two registers
-    Sub { src: Register, dest: Register },
+    Sub(Register, Register),
 }
