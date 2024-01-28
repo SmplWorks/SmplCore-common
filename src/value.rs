@@ -4,6 +4,10 @@ use crate::Width;
 pub struct Value(Width, u16);
 
 impl Value {
+    pub fn new(width : Width, value : u16) -> Self {
+        Self(width, value)
+    }
+
     pub fn byte(value : u8) -> Self {
         Self(Width::Byte, value as u16)
     }
