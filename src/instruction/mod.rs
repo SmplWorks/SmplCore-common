@@ -112,6 +112,24 @@ impl Instruction {
             Jmp(_) => 0x0B,
         }
     }
+
+    pub fn len(&self) -> usize {
+        use Instruction::*;
+        match self {
+            DB(_) => 1,
+
+            Nop |
+            MovR2R(_, _) | MovM2R(_, _) | MovR2M(_, _) |
+            Add(_, _) | Sub(_, _) |
+            Jmp(_)
+                => 2,
+
+            MovC2R(value, _) => match value.width() {
+                Width::Byte => 2,
+                Width::Word => 4,
+            },
+        }
+    }
 }
 
 mod compile;

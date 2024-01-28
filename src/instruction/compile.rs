@@ -29,7 +29,9 @@ mod test {
     macro_rules! case {
         ($ident:ident, $r0:ident, $r1:ident) => {
             let inst = Instruction::$ident(Register::$r0(), Register::$r1()).unwrap();
-            assert_eq!(inst.compile(), vec![inst.opcode(), Register::$r0().compile_with(&Register::$r1())]);
+            let bytes = inst.compile();
+            assert_eq!(bytes, vec![inst.opcode(), Register::$r0().compile_with(&Register::$r1())]);
+            assert_eq!(bytes.len(), inst.len());
         };
     }
 
@@ -46,22 +48,30 @@ mod test {
     #[test]
     fn nop() {
         let inst = Instruction::nop();
-        assert_eq!(inst.compile(), vec![inst.opcode(), 0x00]);
+        let bytes = inst.compile();
+        assert_eq!(bytes, vec![inst.opcode(), 0x00]);
+        assert_eq!(bytes.len(), inst.len());
     }
 
     #[test]
     fn db() {
         let inst = Instruction::db(0xF3);
-        assert_eq!(inst.compile(), vec![inst.opcode()]);
+        let bytes = inst.compile();
+        assert_eq!(bytes, vec![inst.opcode()]);
+        assert_eq!(bytes.len(), inst.len());
     }
 
     #[test]
     fn movc2r() {
         let inst = Instruction::movc2r(Value::byte(0xF3), Register::rb0()).unwrap();
-        assert_eq!(inst.compile(), vec![inst.opcode(), 0xF3 | Register::rb0().compile_dest()]);
+        let bytes = inst.compile();
+        assert_eq!(bytes, vec![inst.opcode(), 0xF3 | Register::rb0().compile_dest()]);
+        assert_eq!(bytes.len(), inst.len());
 
         let inst = Instruction::movc2r(Value::word(0xF337), Register::r0()).unwrap();
-        assert_eq!(inst.compile(), vec![inst.opcode(), Register::r0().compile_dest(), 0x37, 0xF3]);
+        let bytes = inst.compile();
+        assert_eq!(bytes, vec![inst.opcode(), Register::r0().compile_dest(), 0x37, 0xF3]);
+        assert_eq!(bytes.len(), inst.len());
     }
 
     case_two!(movr2r);
@@ -82,6 +92,8 @@ mod test {
     #[test]
     fn jmp() {
         let inst = Instruction::jmp(Register::r0()).unwrap();
-        assert_eq!(inst.compile(), vec![inst.opcode(), Register::r0().compile_src()]);
+        let bytes = inst.compile();
+        assert_eq!(bytes, vec![inst.opcode(), Register::r0().compile_src()]);
+        assert_eq!(bytes.len(), inst.len());
     }
 }
