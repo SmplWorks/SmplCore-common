@@ -12,10 +12,9 @@ impl Instruction {
                 Width::Word => vec![self.opcode(), dest.compile_dest(), value.value_byte(0), value.value_byte(1)],
             }
 
-            MovR2R(src, dest) | MovM2R(src, dest) | MovR2M(src, dest)
+            MovR2R(src, dest) | MovM2R(src, dest) | MovR2M(src, dest) |
+            Add(src, dest) | Sub(src, dest)
                 => vec![self.opcode(), src.compile_with(dest)],
-
-            _ => todo!(),
         }
     }
 }
@@ -28,6 +27,16 @@ mod test {
         ($ident:ident, $r0:ident, $r1:ident) => {
             let inst = Instruction::$ident(Register::$r0(), Register::$r1()).unwrap();
             assert_eq!(inst.compile(), vec![inst.opcode(), Register::$r0().compile_with(&Register::$r1())]);
+        };
+    }
+
+    macro_rules! case_two {
+        ($ident:ident) => {
+            #[test]
+            fn $ident() {
+                case!($ident, rb0, rb1);
+                case!($ident, r0, r1);
+            }
         };
     }
 
@@ -46,11 +55,7 @@ mod test {
         assert_eq!(inst.compile(), vec![inst.opcode(), Register::r0().compile_dest(), 0x37, 0xF3]);
     }
 
-    #[test]
-    fn movr2r() {
-        case!(movr2r, rb0, rb1);
-        case!(movr2r, r0, r1);
-    }
+    case_two!(movr2r);
 
     #[test]
     fn movm2r() {
@@ -61,4 +66,7 @@ mod test {
     fn movr2m() {
         case!(movr2m, rb0, r1);
     }
+    
+    case_two!(add);
+    case_two!(sub);
 }
