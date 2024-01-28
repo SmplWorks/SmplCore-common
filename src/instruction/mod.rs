@@ -28,6 +28,9 @@ pub enum Instruction {
 
     /// Subtract two registers
     Sub(Register, Register),
+
+    // Jumps
+    Jmp(Register),
 }
 
 macro_rules! inst_const {
@@ -84,6 +87,15 @@ impl Instruction {
     inst_const!(add, Add);
     inst_const!(sub, Sub);
 
+    pub fn jmp(reg : Register) -> Result<Self> {
+        let res = Self::Jmp(reg);
+        if reg.width() == Width::Word {
+            Ok(res)
+        } else {
+            Err(Error::OperandWidthMismatch(res))
+        }
+    }
+
     pub fn opcode(&self) -> u8 {
         use Instruction::*;
         use Width::*;
@@ -108,6 +120,8 @@ impl Instruction {
 
             Add(src, _) => case!(src, 0x07),
             Sub(src, _) => case!(src, 0x09),
+
+            Jmp(_) => 0x0B,
         }
     }
 }

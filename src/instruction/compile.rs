@@ -16,6 +16,8 @@ impl Instruction {
             MovR2R(src, dest) | MovM2R(src, dest) | MovR2M(src, dest) |
             Add(src, dest) | Sub(src, dest)
                 => vec![self.opcode(), src.compile_with(dest)],
+
+            Jmp(reg) => vec![self.opcode(), reg.compile_src()],
         }
     }
 }
@@ -76,4 +78,10 @@ mod test {
     
     case_two!(add);
     case_two!(sub);
+
+    #[test]
+    fn jmp() {
+        let inst = Instruction::jmp(Register::r0()).unwrap();
+        assert_eq!(inst.compile(), vec![inst.opcode(), Register::r0().compile_src()]);
+    }
 }
