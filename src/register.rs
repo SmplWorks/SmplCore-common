@@ -1,3 +1,5 @@
+use crate::utils::{Error, Result};
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Register {
     /// CPU information flags, 16-bits
@@ -23,12 +25,12 @@ pub enum Register {
 }
 
 impl Register {
-    pub fn new_r(number : u8, low : bool) -> Self {
+    pub fn new_r(number : u8, low : bool) -> Result<Self> {
         if number > 11 {
-            panic!("Invalid register number: {}", number)
+            return Err(Error::InvalidRegisterNumber(number))
         }
 
-        Self::R { number, low }
+        Ok(Self::R { number, low })
     }
 }
 
