@@ -89,6 +89,21 @@ impl Register {
     pub fn compile_with(&self, reg : &Register) -> u8 {
         self.compile_src() | reg.compile_dest()
     }
+
+    pub fn from_dest(width : Width, dest : u8) -> Self {
+        Self::from_src(width, dest >> 4)
+    }
+
+    pub fn from_src(width : Width, src : u8) -> Self {
+        use Register::*;
+        match src & 0xF {
+            0 => RINFO,
+            1 => RIP,
+            2 => RINT,
+            3 => Flags,
+            n => R(width, n - 4),
+        }
+    }
 }
 
 impl std::fmt::Debug for Register {
@@ -107,5 +122,14 @@ impl std::fmt::Debug for Register {
                 write!(f, "R{}{}", middle, number)
             },
         }
+    }
+}
+
+#[cfg(test)]
+#[test]
+fn compile_from_src() {
+    for r in vec![Register::RINFO, Register::RIP, Register::RIP, Register::Flags, Register::r0(), Register::r1(), Register::r2(), Register::r3(), Register::r4(), Register::r5(), Register::r6(), Register::r7(), Register::r8(), Register::r9(), Register::r10(), Register::r11()] {
+        let src = r.compile_src();
+        assert_eq!(Register::from_src(r.width(), src), r);
     }
 }
