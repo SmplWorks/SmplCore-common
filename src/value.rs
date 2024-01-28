@@ -15,6 +15,18 @@ impl Value {
     pub fn width(&self) -> Width {
         self.0
     }
+
+    pub fn value_byte(&self, idx : usize) -> u8 {
+        if idx > 2 {
+            panic!("Invalid byte index {idx} on {:?}", self);
+        }
+
+        (self.1 >> (idx * 8)) as u8
+    }
+
+    pub fn value_word(&self) -> u16 {
+        self.1
+    }
 }
 
 impl std::fmt::Debug for Value {

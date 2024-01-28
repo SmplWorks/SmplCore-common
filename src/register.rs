@@ -62,6 +62,25 @@ impl Register {
             R(w, _) => *w,
         }
     }
+
+    pub fn compile_src(&self) -> u8 {
+        use Register::*;
+        match self {
+            RINFO => 0,
+            RIP => 1,
+            RINT => 2,
+            Flags => 3,
+            R(_, number) => 4 + number,
+        }
+    }
+
+    pub fn compile_dest(&self) -> u8 {
+        self.compile_src() << 4
+    }
+
+    pub fn compile_with(&self, reg : &Register) -> u8 {
+        self.compile_src() | reg.compile_dest()
+    }
 }
 
 impl std::fmt::Debug for Register {
