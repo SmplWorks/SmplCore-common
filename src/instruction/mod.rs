@@ -124,10 +124,7 @@ impl Instruction {
             Jmp(_)
                 => 2,
 
-            MovC2R(value, _) => match value.width() {
-                Width::Byte => 2,
-                Width::Word => 4,
-            },
+            MovC2R(_, _) => 4,
         }
     }
 }

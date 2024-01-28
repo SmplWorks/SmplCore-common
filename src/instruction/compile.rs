@@ -9,7 +9,7 @@ impl Instruction {
             DB(_) => vec![self.opcode()],
 
             MovC2R(value, dest) => match value.width() {
-                Width::Byte => vec![self.opcode(), value.value_byte(0) | dest.compile_dest()],
+                Width::Byte => vec![self.opcode(), dest.compile_dest(), value.value_byte(0), 0x00],
                 Width::Word => vec![self.opcode(), dest.compile_dest(), value.value_byte(0), value.value_byte(1)],
             }
 
@@ -65,7 +65,7 @@ mod test {
     fn movc2r() {
         let inst = Instruction::movc2r(Value::byte(0xF3), Register::rb0()).unwrap();
         let bytes = inst.compile();
-        assert_eq!(bytes, vec![inst.opcode(), 0xF3 | Register::rb0().compile_dest()]);
+        assert_eq!(bytes, vec![inst.opcode(), Register::rb0().compile_dest(), 0xF3, 0x00]);
         assert_eq!(bytes.len(), inst.len());
 
         let inst = Instruction::movc2r(Value::word(0xF337), Register::r0()).unwrap();
