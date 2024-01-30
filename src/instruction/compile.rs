@@ -31,7 +31,7 @@ mod test {
             let inst = Instruction::$ident(Register::$r0(), Register::$r1()).unwrap();
             let bytes = inst.compile();
             assert_eq!(bytes, vec![inst.opcode(), Register::$r0().compile_with(&Register::$r1())]);
-            assert_eq!(bytes.len(), inst.len());
+            assert_eq!(bytes.len(), inst.len().into());
         };
     }
 
@@ -50,7 +50,7 @@ mod test {
         let inst = Instruction::nop();
         let bytes = inst.compile();
         assert_eq!(bytes, vec![inst.opcode(), 0x00]);
-        assert_eq!(bytes.len(), inst.len());
+        assert_eq!(bytes.len(), inst.len().into());
     }
 
     #[test]
@@ -58,7 +58,7 @@ mod test {
         let inst = Instruction::db(0xF3);
         let bytes = inst.compile();
         assert_eq!(bytes, vec![inst.opcode()]);
-        assert_eq!(bytes.len(), inst.len());
+        assert_eq!(bytes.len(), inst.len().into());
     }
 
     #[test]
@@ -66,12 +66,12 @@ mod test {
         let inst = Instruction::movc2r(Value::byte(0xF3), Register::rb0()).unwrap();
         let bytes = inst.compile();
         assert_eq!(bytes, vec![inst.opcode(), Register::rb0().compile_dest(), 0xF3, 0x00]);
-        assert_eq!(bytes.len(), inst.len());
+        assert_eq!(bytes.len(), inst.len().into());
 
         let inst = Instruction::movc2r(Value::word(0xF337), Register::r0()).unwrap();
         let bytes = inst.compile();
         assert_eq!(bytes, vec![inst.opcode(), Register::r0().compile_dest(), 0x37, 0xF3]);
-        assert_eq!(bytes.len(), inst.len());
+        assert_eq!(bytes.len(), inst.len().into());
     }
 
     case_two!(movr2r);
@@ -94,6 +94,6 @@ mod test {
         let inst = Instruction::jmp(Register::r0()).unwrap();
         let bytes = inst.compile();
         assert_eq!(bytes, vec![inst.opcode(), Register::r0().compile_src()]);
-        assert_eq!(bytes.len(), inst.len());
+        assert_eq!(bytes.len(), inst.len().into());
     }
 }

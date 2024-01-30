@@ -113,7 +113,7 @@ impl Instruction {
         }
     }
 
-    pub fn len(&self) -> usize {
+    pub fn len(&self) -> u16 {
         use Instruction::*;
         match self {
             DB(_) => 1,
