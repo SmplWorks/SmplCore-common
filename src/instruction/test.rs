@@ -108,6 +108,9 @@ fn all_different_opcodes() {
         cw2w!(subc2r),
         b2b!(subr2r),
         w2w!(subr2r),
+
+        Instruction::ajmp(Register::r0()).unwrap(),
+        Instruction::jmp(Register::r0()).unwrap(),
     ];
 
     for inst0 in all.iter() {

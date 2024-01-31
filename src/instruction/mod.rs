@@ -141,8 +141,8 @@ impl Instruction {
             SubC2R(src, _) => case!(src, 0x0B),
             SubR2R(src, _) => case!(src, 0x0D),
 
-            AJmp(_) => 0x0E,
-            Jmp(_) => 0x0F,
+            AJmp(_) => 0x0F,
+            Jmp(_) => 0x10,
         }
     }
 
