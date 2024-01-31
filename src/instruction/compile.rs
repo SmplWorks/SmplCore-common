@@ -8,16 +8,19 @@ impl Instruction {
             Nop => vec![self.opcode(), 0x00],
             DB(_) => vec![self.opcode()],
 
-            MovC2R(value, dest) => match value.width() {
+            MovC2R(value, dest) |
+            AddC2R(value, dest) | SubC2R(value, dest)
+                => match value.width() {
                 Width::Byte => vec![self.opcode(), dest.compile_dest(), value.value_byte(0), 0x00],
                 Width::Word => vec![self.opcode(), dest.compile_dest(), value.value_byte(0), value.value_byte(1)],
             }
 
             MovR2R(src, dest) | MovM2R(src, dest) | MovR2M(src, dest) |
-            Add(src, dest) | Sub(src, dest)
+            AddR2R(src, dest) | SubR2R(src, dest)
                 => vec![self.opcode(), src.compile_with(dest)],
 
-            Jmp(reg) => vec![self.opcode(), reg.compile_src()],
+            AJmp(reg) | Jmp(reg)
+                => vec![self.opcode(), reg.compile_src()],
         }
     }
 }
@@ -26,7 +29,25 @@ impl Instruction {
 mod test {
     use super::*;
 
-    macro_rules! case {
+    macro_rules! case_r {
+        ($ident:ident, $reg:ident, $as:ident) => {
+            let inst = Instruction::$ident(Register::$reg()).unwrap();
+            let bytes = inst.compile();
+            assert_eq!(bytes, vec![inst.opcode(), Register::$reg().$as()]);
+            assert_eq!(bytes.len(), inst.len().into());
+        };
+    }
+
+    macro_rules! case_c2r {
+        ($ident:ident, $width:ident, $value:literal, $dest:ident) => {
+            let inst = Instruction::$ident(Value::$width($value), Register::$dest()).unwrap();
+            let bytes = inst.compile();
+            assert_eq!(bytes, vec![inst.opcode(), Register::$dest().compile_dest(), Value::$width($value).value_byte(0), Value::$width($value).value_byte(1)]);
+            assert_eq!(bytes.len(), inst.len().into());
+        };
+    }
+
+    macro_rules! case_r2r {
         ($ident:ident, $r0:ident, $r1:ident) => {
             let inst = Instruction::$ident(Register::$r0(), Register::$r1()).unwrap();
             let bytes = inst.compile();
@@ -35,12 +56,22 @@ mod test {
         };
     }
 
-    macro_rules! case_two {
+    macro_rules! case_two_c2r {
         ($ident:ident) => {
             #[test]
             fn $ident() {
-                case!($ident, rb0, rb1);
-                case!($ident, r0, r1);
+                case_c2r!($ident, byte, 0xF3, rb1);
+                case_c2r!($ident, word, 0xF337, r1);
+            }
+        };
+    }
+
+    macro_rules! case_two_r2r {
+        ($ident:ident) => {
+            #[test]
+            fn $ident() {
+                case_r2r!($ident, rb0, rb1);
+                case_r2r!($ident, r0, r1);
             }
         };
     }
@@ -61,39 +92,31 @@ mod test {
         assert_eq!(bytes.len(), inst.len().into());
     }
 
-    #[test]
-    fn movc2r() {
-        let inst = Instruction::movc2r(Value::byte(0xF3), Register::rb0()).unwrap();
-        let bytes = inst.compile();
-        assert_eq!(bytes, vec![inst.opcode(), Register::rb0().compile_dest(), 0xF3, 0x00]);
-        assert_eq!(bytes.len(), inst.len().into());
-
-        let inst = Instruction::movc2r(Value::word(0xF337), Register::r0()).unwrap();
-        let bytes = inst.compile();
-        assert_eq!(bytes, vec![inst.opcode(), Register::r0().compile_dest(), 0x37, 0xF3]);
-        assert_eq!(bytes.len(), inst.len().into());
-    }
-
-    case_two!(movr2r);
+    case_two_c2r!(movc2r);
+    case_two_r2r!(movr2r);
 
     #[test]
     fn movm2r() {
-        case!(movm2r, r0, rb1);
+        case_r2r!(movm2r, r0, rb1);
     }
 
     #[test]
     fn movr2m() {
-        case!(movr2m, rb0, r1);
+        case_r2r!(movr2m, rb0, r1);
     }
     
-    case_two!(add);
-    case_two!(sub);
+    case_two_c2r!(addc2r);
+    case_two_r2r!(addr2r);
+    case_two_c2r!(subc2r);
+    case_two_r2r!(subr2r);
+
+    #[test]
+    fn ajmp() {
+        case_r!(ajmp, r0, compile_src);
+    }
 
     #[test]
     fn jmp() {
-        let inst = Instruction::jmp(Register::r0()).unwrap();
-        let bytes = inst.compile();
-        assert_eq!(bytes, vec![inst.opcode(), Register::r0().compile_src()]);
-        assert_eq!(bytes.len(), inst.len().into());
+        case_r!(jmp, r0, compile_src);
     }
 }

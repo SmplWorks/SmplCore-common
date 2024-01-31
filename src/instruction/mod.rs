@@ -23,17 +23,45 @@ pub enum Instruction {
     MovR2M(Register, Register),
     
     // Arithmetic
+    /// Add value to register
+    AddC2R(Value, Register),
+
     /// Add two registers
-    Add(Register, Register),
+    AddR2R(Register, Register),
+
+    /// Subtract value from register
+    SubC2R(Value, Register),
 
     /// Subtract two registers
-    Sub(Register, Register),
+    SubR2R(Register, Register),
 
     // Jumps
+    /// Absolute jump
+    AJmp(Register),
+
+    /// Relative jump
     Jmp(Register),
 }
 
-macro_rules! inst_const {
+macro_rules! inst_constr {
+    ($ident:ident, $variant:ident) => {
+        pub fn $ident(reg : Register) -> Result<Self> {
+            let res = Self::$variant(reg);
+            res.is_valid().then_some(res).ok_or(Error::OperandWidthMismatch(res))
+        }
+    };
+}
+
+macro_rules! inst_constc2r {
+    ($ident:ident, $variant:ident) => {
+        pub fn $ident(value : Value, dest : Register) -> Result<Self> {
+            let res = Self::$variant(value, dest);
+            res.is_valid().then_some(res).ok_or(Error::OperandWidthMismatch(res))
+        }
+    };
+}
+
+macro_rules! inst_constr2r {
     ($ident:ident, $variant:ident) => {
         pub fn $ident(src : Register, dest : Register) -> Result<Self> {
             let res = Self::$variant(src, dest);
@@ -51,21 +79,18 @@ impl Instruction {
         Self::DB(value)
     }
 
-    pub fn movc2r(value : Value, dest : Register) -> Result<Self> {
-        let res = Self::MovC2R(value, dest);
-        res.is_valid().then_some(res).ok_or(Error::OperandWidthMismatch(res))
-    }
+    inst_constc2r!(movc2r, MovC2R);
+    inst_constr2r!(movr2r, MovR2R);
+    inst_constr2r!(movm2r, MovM2R);
+    inst_constr2r!(movr2m, MovR2M);
 
-    inst_const!(movr2r, MovR2R);
-    inst_const!(movm2r, MovM2R);
-    inst_const!(movr2m, MovR2M);
-    inst_const!(add, Add);
-    inst_const!(sub, Sub);
+    inst_constc2r!(addc2r, AddC2R);
+    inst_constr2r!(addr2r, AddR2R);
+    inst_constc2r!(subc2r, SubC2R);
+    inst_constr2r!(subr2r, SubR2R);
 
-    pub fn jmp(reg : Register) -> Result<Self> {
-        let res = Self::Jmp(reg);
-        res.is_valid().then_some(res).ok_or(Error::OperandWidthMismatch(res))
-    }
+    inst_constr!(ajmp, AJmp);
+    inst_constr!(jmp, Jmp);
 
     pub fn is_valid(&self) -> bool {
         use Instruction::*;
@@ -73,14 +98,19 @@ impl Instruction {
             Nop => true,
             DB(_) => true, // TODO: Should this always be true?
 
-            MovC2R(value, dest) => value.width() == dest.width() && dest.is_writable(),
             MovM2R(src, dest) => src.width() == Width::Word && dest.width() == Width::Byte && dest.is_writable(),
             MovR2M(src, dest) => src.width() == Width::Byte && dest.width() == Width::Word && dest.is_writable(),
 
-            MovR2R(src, dest) | Add(src, dest) | Sub(src, dest)
+            MovR2R(src, dest) |
+            AddR2R(src, dest) | SubR2R(src, dest)
                 => src.width() == dest.width() && dest.is_writable(),
 
-            Jmp(reg) => reg.width() == Width::Word,
+            MovC2R(value, dest) |
+            AddC2R(value, dest) | SubC2R(value, dest)
+                => value.width() == dest.width() && dest.is_writable(),
+
+            AJmp(reg) | Jmp(reg)
+                => reg.width() == Width::Word,
         }
     }
 
@@ -106,10 +136,13 @@ impl Instruction {
             MovM2R(_, _) => 0x05,
             MovR2M(_, _) => 0x06,
 
-            Add(src, _) => case!(src, 0x07),
-            Sub(src, _) => case!(src, 0x09),
+            AddC2R(src, _) => case!(src, 0x07),
+            AddR2R(src, _) => case!(src, 0x09),
+            SubC2R(src, _) => case!(src, 0x0B),
+            SubR2R(src, _) => case!(src, 0x0D),
 
-            Jmp(_) => 0x0B,
+            AJmp(_) => 0x0E,
+            Jmp(_) => 0x0F,
         }
     }
 
@@ -120,11 +153,13 @@ impl Instruction {
 
             Nop |
             MovR2R(_, _) | MovM2R(_, _) | MovR2M(_, _) |
-            Add(_, _) | Sub(_, _) |
-            Jmp(_)
+            AddR2R(_, _) | SubR2R(_, _) |
+            AJmp(_) | Jmp(_)
                 => 2,
 
-            MovC2R(_, _) => 4,
+            MovC2R(_, _) |
+            AddC2R(_, _) | SubC2R(_, _)
+                => 4,
         }
     }
 }

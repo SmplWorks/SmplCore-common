@@ -18,7 +18,7 @@ macro_rules! check_widths_err {
 macro_rules! check_widths_case {
     ($name:ident, $ident:ident, $IDENT:ident) => {
         #[test]
-        fn $ident() {
+        fn $name() {
             check_widths_ok!($ident, rb0, rb1);
             check_widths_ok!($ident, r0, r1);
             check_widths_err!($ident, $IDENT, rb0, r1);
@@ -27,14 +27,19 @@ macro_rules! check_widths_case {
     };
 }
 
-#[test]
-fn check_widths_c2r() {
-    assert!(Instruction::movc2r(Value::byte(0), Register::rb0()).is_ok());
-    assert!(Instruction::movc2r(Value::word(0), Register::r0()).is_ok());
-    assert_eq!(Instruction::movc2r(Value::byte(0), Register::r0()), Err(Error::OperandWidthMismatch(Instruction::MovC2R(Value::byte(0), Register::r0()))));
-    assert_eq!(Instruction::movc2r(Value::word(0), Register::rb0()), Err(Error::OperandWidthMismatch(Instruction::MovC2R(Value::word(0), Register::rb0()))));
+macro_rules! check_widths_case_c2r {
+    ($name:ident, $ident:ident, $IDENT:ident) => {
+        #[test]
+        fn $name() {
+            assert!(Instruction::$ident(Value::byte(0), Register::rb0()).is_ok());
+            assert!(Instruction::$ident(Value::word(0), Register::r0()).is_ok());
+            assert_eq!(Instruction::$ident(Value::byte(0), Register::r0()), Err(Error::OperandWidthMismatch(Instruction::$IDENT(Value::byte(0), Register::r0()))));
+            assert_eq!(Instruction::$ident(Value::word(0), Register::rb0()), Err(Error::OperandWidthMismatch(Instruction::$IDENT(Value::word(0), Register::rb0()))));
+        }
+    };
 }
 
+check_widths_case_c2r!(check_widths_movc2r, movc2r, MovC2R);
 check_widths_case!(check_widths_movr2r, movr2r, MovR2R);
 
 #[test]
@@ -53,14 +58,28 @@ fn check_widths_movr2m() {
     check_widths_err!(movr2m, MovR2M, r0, rb1);
 }
 
-check_widths_case!(check_widths_add, add, Add);
-check_widths_case!(check_widths_sub, sub, Sub);
+check_widths_case_c2r!(check_widths_addc2r, addc2r, AddC2R);
+check_widths_case!(check_widths_addr2r, addr2r, AddR2R);
+check_widths_case_c2r!(check_widths_subc2r, subc2r, SubC2R);
+check_widths_case!(check_widths_subr2r, subr2r, SubR2R);
 
 #[test]
 fn all_different_opcodes() {
+    macro_rules! cb2b {
+        ($ident:ident) => {
+            Instruction::$ident(Value::byte(0), Register::rb1()).unwrap()
+        };
+    }
+
     macro_rules! b2b {
         ($ident:ident) => {
             Instruction::$ident(Register::rb0(), Register::rb1()).unwrap()
+        };
+    }
+
+    macro_rules! cw2w {
+        ($ident:ident) => {
+            Instruction::$ident(Value::word(0), Register::r1()).unwrap()
         };
     }
 
@@ -74,17 +93,21 @@ fn all_different_opcodes() {
     let all = vec![
         Instruction::nop(),
 
-        Instruction::movc2r(Value::byte(1), Register::rb0()).unwrap(),
-        Instruction::movc2r(Value::word(1), Register::r0()).unwrap(),
+        cb2b!(movc2r),
+        cw2w!(movc2r),
         b2b!(movr2r),
         w2w!(movr2r),
         Instruction::movm2r(Register::r0(), Register::rb1()).unwrap(),
         Instruction::movr2m(Register::rb0(), Register::r1()).unwrap(),
 
-        b2b!(add),
-        w2w!(add),
-        b2b!(sub),
-        w2w!(sub),
+        cb2b!(addc2r),
+        cw2w!(addc2r),
+        b2b!(addr2r),
+        w2w!(addr2r),
+        cb2b!(subc2r),
+        cw2w!(subc2r),
+        b2b!(subr2r),
+        w2w!(subr2r),
     ];
 
     for inst0 in all.iter() {
