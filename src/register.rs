@@ -1,3 +1,5 @@
+use crate::utils::{Error, Result};
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Width {
     Byte, Word, 
@@ -54,6 +56,40 @@ impl Register {
     r_const!(r10, Word, 10);
     r_const!(rb11, Byte, 11);
     r_const!(r11, Word, 11);
+
+    pub fn from_str(s : &str) -> Result<Self> {
+        match &*s.to_lowercase() {
+            "rinfo" => Ok(Self::RINFO),
+            "rip" => Ok(Self::RIP),
+            "rint" => Ok(Self::RINT),
+            "flags" => Ok(Self::Flags),
+            "r0" => Ok(Self::r0()),
+            "rb0" => Ok(Self::rb0()),
+            "r1" => Ok(Self::r1()),
+            "rb1" => Ok(Self::rb1()),
+            "r2" => Ok(Self::r2()),
+            "rb2" => Ok(Self::rb2()),
+            "r3" => Ok(Self::r3()),
+            "rb3" => Ok(Self::rb3()),
+            "r4" => Ok(Self::r4()),
+            "rb4" => Ok(Self::rb4()),
+            "r5" => Ok(Self::r5()),
+            "rb5" => Ok(Self::rb5()),
+            "r6" => Ok(Self::r6()),
+            "rb6" => Ok(Self::rb6()),
+            "r7" => Ok(Self::r7()),
+            "rb7" => Ok(Self::rb7()),
+            "r8" => Ok(Self::r8()),
+            "rb8" => Ok(Self::rb8()),
+            "r9" => Ok(Self::r9()),
+            "rb9" => Ok(Self::rb9()),
+            "r10" => Ok(Self::r10()),
+            "rb10" => Ok(Self::rb10()),
+            "r11" => Ok(Self::r11()),
+            "rb11" => Ok(Self::rb11()),
+            _ => Err(Error::InvalidRegister(s.to_string())),
+        }
+    }
 
     pub fn width(&self) -> Width {
         use Register::*;
@@ -125,11 +161,28 @@ impl std::fmt::Debug for Register {
     }
 }
 
+impl std::fmt::Display for Register {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 #[cfg(test)]
-#[test]
-fn compile_from_src() {
-    for r in vec![Register::RINFO, Register::RIP, Register::RIP, Register::Flags, Register::r0(), Register::r1(), Register::r2(), Register::r3(), Register::r4(), Register::r5(), Register::r6(), Register::r7(), Register::r8(), Register::r9(), Register::r10(), Register::r11()] {
-        let src = r.compile_src();
-        assert_eq!(Register::from_src(r.width(), src), r);
+mod test {
+    use super::*;
+
+    #[test]
+    fn compile_from_src() {
+        for r in vec![Register::RINFO, Register::RIP, Register::RIP, Register::Flags, Register::r0(), Register::r1(), Register::r2(), Register::r3(), Register::r4(), Register::r5(), Register::r6(), Register::r7(), Register::r8(), Register::r9(), Register::r10(), Register::r11()] {
+            let src = r.compile_src();
+            assert_eq!(Register::from_src(r.width(), src), r);
+        }
+    }
+
+    #[test]
+    fn from_str() {
+        for r in vec![Register::RINFO, Register::RIP, Register::RIP, Register::Flags, Register::r0(), Register::r1(), Register::r2(), Register::r3(), Register::r4(), Register::r5(), Register::r6(), Register::r7(), Register::r8(), Register::r9(), Register::r10(), Register::r11()] {
+            assert_eq!(Register::from_str(&r.to_string()), Ok(r));
+        }
     }
 }
