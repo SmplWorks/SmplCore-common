@@ -311,16 +311,16 @@ impl Instruction {
             DB(_) => 1,
 
             Nop |
-            MovR2R(_, _) | MovM2R(_, _) | MovR2M(_, _) |
-            AddR2R(_, _) | SubR2R(_, _) |
-            AJmp(_) | Jmp(_)
+            MovR2R(_, _) | MovM2R(_, _) | MovR2M(_, _) | Push(_) | Pop(_) |
+            AddR2R(_, _) | SubR2R(_, _) | Not(_) | AndR2R(_, _) | OrR2R(_, _) | Shl(_, _) | Shr(_, _) | Shre(_, _) | CmpR2R(_, _) |
+            AJmp(_) | Jmp(_) | Jeq(_) | Jneq(_) | Jlt(_) | Jgt(_) | Jleq(_) | Jgeq(_) | Jo(_) | Jno(_) | CallR(_) | Ret |
+            Int(_) | Sti(_) | Cli
                 => 2,
 
             MovC2R(_, _) |
-            AddC2R(_, _) | SubC2R(_, _)
+            AddC2R(_, _) | SubC2R(_, _) | AndC2R(_, _) | OrC2R(_, _) | CmpC2R(_, _) |
+            CallC(_)
                 => 4,
-
-            _ => todo!("{self:?}")
         }
     }
 }
