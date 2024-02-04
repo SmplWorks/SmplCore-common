@@ -1,12 +1,39 @@
 use super::*;
 
-macro_rules! check_widths_ok {
+macro_rules! check_width_c2r_ok {
+    ($ident:ident, $width:ident, $dest:ident) => {
+        assert!(Instruction::$ident(Value::$width(0), Register::$dest()).is_ok());
+    };
+}
+
+macro_rules! check_width_c2r_err {
+    ($ident:ident, $IDENT:ident, $width:ident, $dest:ident) => {
+        assert_eq!(
+            Instruction::$ident(Value::$width(0), Register::$dest()), 
+            Err(Error::OperandWidthMismatch(Instruction::$IDENT(Value::$width(0), Register::$dest())))
+        );
+    };
+}
+
+macro_rules! check_width_c2r {
+    ($name:ident, $ident:ident, $IDENT:ident) => {
+        #[test]
+        fn $name() {
+            check_width_c2r_ok!($ident, byte, rb1);
+            check_width_c2r_ok!($ident, word, r1);
+            check_width_c2r_err!($ident, $IDENT, byte, r1);
+            check_width_c2r_err!($ident, $IDENT, word, rb1);
+        }
+    };
+}
+
+macro_rules! check_width_r2r_ok {
     ($ident:ident, $r0:ident, $r1:ident) => {
         assert!(Instruction::$ident(Register::$r0(), Register::$r1()).is_ok());
     };
 }
 
-macro_rules! check_widths_err {
+macro_rules! check_width_r2r_err {
     ($ident:ident, $IDENT:ident, $r0:ident, $r1:ident) => {
         assert_eq!(
             Instruction::$ident(Register::$r0(), Register::$r1()), 
@@ -15,19 +42,32 @@ macro_rules! check_widths_err {
     };
 }
 
-macro_rules! check_widths_case {
+macro_rules! check_width_r2r {
     ($name:ident, $ident:ident, $IDENT:ident) => {
         #[test]
         fn $name() {
-            check_widths_ok!($ident, rb0, rb1);
-            check_widths_ok!($ident, r0, r1);
-            check_widths_err!($ident, $IDENT, rb0, r1);
-            check_widths_err!($ident, $IDENT, r0, rb1);
+            check_width_r2r_ok!($ident, rb0, rb1);
+            check_width_r2r_ok!($ident, r0, r1);
+            check_width_r2r_err!($ident, $IDENT, rb0, r1);
+            check_width_r2r_err!($ident, $IDENT, r0, rb1);
         }
     };
 }
 
-macro_rules! check_widths_case_c2r {
+macro_rules! check_width_r {
+    ($name:ident, $ident:ident, $IDENT:ident) => {
+        #[test]
+        fn $name() {
+            assert!(Instruction::$ident(Register::r0()).is_ok());
+            assert_eq!(
+                Instruction::$ident(Register::rb0()), 
+                Err(Error::OperandWidthMismatch(Instruction::$IDENT(Register::rb0())))
+            );
+        }
+    };
+}
+
+macro_rules! check_width_c2r {
     ($name:ident, $ident:ident, $IDENT:ident) => {
         #[test]
         fn $name() {
@@ -39,29 +79,64 @@ macro_rules! check_widths_case_c2r {
     };
 }
 
-check_widths_case_c2r!(check_widths_movc2r, movc2r, MovC2R);
-check_widths_case!(check_widths_movr2r, movr2r, MovR2R);
+check_width_c2r!(check_width_movc2r, movc2r, MovC2R);
+check_width_r2r!(check_width_movr2r, movr2r, MovR2R);
 
 #[test]
-fn check_widths_movm2r() {
-    check_widths_ok!(movm2r, r0, rb1);
-    check_widths_err!(movm2r, MovM2R, r0, r1);
-    check_widths_err!(movm2r, MovM2R, rb0, rb1);
-    check_widths_err!(movm2r, MovM2R, rb0, r1);
+fn check_width_movm2r() {
+    check_width_r2r_ok!(movm2r, r0, rb1);
+    check_width_r2r_err!(movm2r, MovM2R, r0, r1);
+    check_width_r2r_err!(movm2r, MovM2R, rb0, rb1);
+    check_width_r2r_err!(movm2r, MovM2R, rb0, r1);
 }
 
 #[test]
-fn check_widths_movr2m() {
-    check_widths_ok!(movr2m, rb0, r1);
-    check_widths_err!(movr2m, MovR2M, r0, r1);
-    check_widths_err!(movr2m, MovR2M, rb0, rb1);
-    check_widths_err!(movr2m, MovR2M, r0, rb1);
+fn check_width_movr2m() {
+    check_width_r2r_ok!(movr2m, rb0, r1);
+    check_width_r2r_err!(movr2m, MovR2M, r0, r1);
+    check_width_r2r_err!(movr2m, MovR2M, rb0, rb1);
+    check_width_r2r_err!(movr2m, MovR2M, r0, rb1);
 }
 
-check_widths_case_c2r!(check_widths_addc2r, addc2r, AddC2R);
-check_widths_case!(check_widths_addr2r, addr2r, AddR2R);
-check_widths_case_c2r!(check_widths_subc2r, subc2r, SubC2R);
-check_widths_case!(check_widths_subr2r, subr2r, SubR2R);
+check_width_r!(check_width_push, push, Push);
+check_width_r!(check_width_pop, pop, Pop);
+
+check_width_c2r!(check_width_addc2r, addc2r, AddC2R);
+check_width_r2r!(check_width_addr2r, addr2r, AddR2R);
+check_width_c2r!(check_width_subc2r, subc2r, SubC2R);
+check_width_r2r!(check_width_subr2r, subr2r, SubR2R);
+check_width_c2r!(check_width_andc2r, andc2r, AndC2R);
+check_width_r2r!(check_width_andr2r, andr2r, AndR2R);
+check_width_c2r!(check_width_orc2r, orc2r, OrC2R);
+check_width_r2r!(check_width_orr2r, orr2r, OrR2R);
+// TODO: Check shl, shr, shre
+check_width_c2r!(check_width_cmpc2r, cmpc2r, CmpC2R);
+check_width_r2r!(check_width_cmpr2r, cmpr2r, CmpR2R);
+
+check_width_r!(check_width_ajmp, ajmp, AJmp);
+check_width_r!(check_width_jmp, jmp, Jmp);
+check_width_r!(check_width_jeq, jeq, Jeq);
+check_width_r!(check_width_jneq, jneq, Jneq);
+check_width_r!(check_width_jlt, jlt, Jlt);
+check_width_r!(check_width_jgt, jgt, Jgt);
+check_width_r!(check_width_jleq, jleq, Jleq);
+check_width_r!(check_width_jgeq, jgeq, Jgeq);
+check_width_r!(check_width_jo, jo, Jo);
+check_width_r!(check_width_jno, jno, Jno);
+
+#[test]
+fn check_width_callc(){
+    assert!(Instruction::callc(Value::word(0)).is_ok());
+    assert_eq!(
+        Instruction::callc(Value::byte(0)),
+        Err(Error::OperandWidthMismatch(Instruction::CallC(Value::byte(0))))
+    );
+}
+
+check_width_r!(check_width_callr, callr, CallR);
+
+check_width_r!(check_width_int, int, Int);
+check_width_r!(check_width_sti, sti, Sti);
 
 #[test]
 fn all_different_opcodes() {
