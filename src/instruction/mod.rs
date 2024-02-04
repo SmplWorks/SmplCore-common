@@ -21,6 +21,12 @@ pub enum Instruction {
 
     /// Move from register to memory
     MovR2M(Register, Register),
+
+    /// Push register to the stack
+    Push(Register),
+
+    /// Pop register from the stack
+    Pop(Register),
     
     // Arithmetic
     /// Add value to register
@@ -35,12 +41,93 @@ pub enum Instruction {
     /// Subtract two registers
     SubR2R(Register, Register),
 
+    /// Biwtise not a register
+    Not(Register),
+
+    /// Biwtise and a register with a value
+    AndC2R(Value, Register),
+
+    /// Biwtise and two registers
+    AndR2R(Register, Register),
+
+    /// Biwtise or a register with a value
+    OrC2R(Value, Register),
+
+    /// Biwtise or two registers
+    OrR2R(Register, Register),
+
+    /// Shift left a register
+    Shl(Value, Register),
+
+    /// Shift right a register
+    Shr(Value, Register),
+
+    /// Shift right a register (sign extended)
+    Shre(Value, Register),
+
+    /// Compare a register to a value
+    CmpC2R(Value, Register),
+
+    /// Compare two registers
+    CmpR2R(Register, Register),
+
     // Jumps
     /// Absolute jump
     AJmp(Register),
 
     /// Relative jump
     Jmp(Register),
+
+    /// Relative jump if equal
+    Jeq(Register),
+
+    /// Relative jump if not equal
+    Jneq(Register),
+
+    /// Relative jump if less than
+    Jlt(Register),
+
+    /// Relative jump if greater than
+    Jgt(Register),
+
+    /// Relative jump if less than or equal 
+    Jleq(Register),
+
+    /// Relative jump if greater than or equal 
+    Jgeq(Register),
+
+    /// Relative jump if overflow
+    Jo(Register),
+
+    /// Relative jump if not overflow
+    Jno(Register),
+
+    /// Push RIP and to the stack and relative jump
+    CallC(Value),
+
+    /// Push RIP and to the stack and relative jump
+    CallR(Register),
+
+    /// Pop RIP from the stack
+    Ret,
+
+    /// Send an interrupt with value of the register
+    Int(Register),
+
+    /// Enable interruptions and point handler to register
+    Sti(Register),
+
+    /// Disable interruptions
+    Cli,
+}
+
+macro_rules! inst_constc {
+    ($ident:ident, $variant:ident) => {
+        pub fn $ident(value : Value) -> Result<Self> {
+            let res = Self::$variant(value);
+            res.is_valid().then_some(res).ok_or(Error::OperandWidthMismatch(res))
+        }
+    };
 }
 
 macro_rules! inst_constr {
@@ -83,14 +170,47 @@ impl Instruction {
     inst_constr2r!(movr2r, MovR2R);
     inst_constr2r!(movm2r, MovM2R);
     inst_constr2r!(movr2m, MovR2M);
+    inst_constr!(push, Push);
+    inst_constr!(pop, Pop);
 
     inst_constc2r!(addc2r, AddC2R);
     inst_constr2r!(addr2r, AddR2R);
     inst_constc2r!(subc2r, SubC2R);
     inst_constr2r!(subr2r, SubR2R);
+    inst_constr!(not, Not);
+    inst_constc2r!(andc2r, AndC2R);
+    inst_constr2r!(andr2r, AndR2R);
+    inst_constc2r!(orc2r, OrC2R);
+    inst_constr2r!(orr2r, OrR2R);
+    inst_constc2r!(shl, Shl);
+    inst_constc2r!(shr, Shr);
+    inst_constc2r!(shre, Shre);
+    inst_constc2r!(cmpc2r, CmpC2R);
+    inst_constr2r!(cmpr2r, CmpR2R);
 
     inst_constr!(ajmp, AJmp);
     inst_constr!(jmp, Jmp);
+    inst_constr!(jeq, Jeq);
+    inst_constr!(jneq, Jneq);
+    inst_constr!(jlt, Jlt);
+    inst_constr!(jgt, Jgt);
+    inst_constr!(jleq, Jleq);
+    inst_constr!(jgeq, Jgeq);
+    inst_constr!(jo, Jo);
+    inst_constr!(jno, Jno);
+    inst_constc!(callc, CallC);
+    inst_constr!(callr, CallR);
+
+    pub fn ret() -> Self {
+        Self::Ret
+    }
+
+    inst_constr!(int, Int);
+    inst_constr!(sti, Sti);
+
+    pub fn cli() -> Self {
+        Self::Cli
+    }
 
     pub fn is_valid(&self) -> bool {
         use Instruction::*;
@@ -111,6 +231,8 @@ impl Instruction {
 
             AJmp(reg) | Jmp(reg)
                 => reg.width() == Width::Word,
+
+            _ => todo!("{self:?}")
         }
     }
 
@@ -143,6 +265,8 @@ impl Instruction {
 
             AJmp(_) => 0x0F,
             Jmp(_) => 0x10,
+
+            _ => todo!("{self:?}")
         }
     }
 
@@ -162,6 +286,8 @@ impl Instruction {
             MovC2R(_, _) |
             AddC2R(_, _) | SubC2R(_, _)
                 => 4,
+
+            _ => todo!("{self:?}")
         }
     }
 }

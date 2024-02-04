@@ -21,6 +21,12 @@ pub enum Register {
     /// Flags, always 16-bits
     Flags,
 
+    /// Stack base
+    RSB,
+
+    /// Stack head
+    RSH,
+
     /// General purpose register
     R(Width, u8),
 }
@@ -54,15 +60,11 @@ impl Register {
     r_const!(r8, Word, 8);
     r_const!(rb9, Byte, 9);
     r_const!(r9, Word, 9);
-    r_const!(rb10, Byte, 10);
-    r_const!(r10, Word, 10);
-    r_const!(rb11, Byte, 11);
-    r_const!(r11, Word, 11);
 
     pub fn width(&self) -> Width {
         use Register::*;
         match self {
-            RINFO | RIP | RINT | Flags => Width::Word,
+            RINFO | RIP | RINT | Flags | RSB | RSH => Width::Word,
             R(w, _) => *w,
         }
     }
@@ -70,7 +72,7 @@ impl Register {
     pub fn is_writable(&self) -> bool {
         use Register::*;
         match self {
-            RINFO | RIP | RINT | Flags => false,
+            RINFO | RIP | RINT | Flags | RSB | RSH => false,
             R(_, _) => true,
         }
     }
@@ -82,7 +84,9 @@ impl Register {
             RIP => 1,
             RINT => 2,
             Flags => 3,
-            R(_, number) => 4 + number,
+            RSB => 4,
+            RSH => 5,
+            R(_, number) => 6 + number,
         }
     }
 
@@ -105,7 +109,9 @@ impl Register {
             1 => RIP,
             2 => RINT,
             3 => Flags,
-            n => R(width, n - 4),
+            4 => RSB,
+            5 => RSH,
+            n => R(width, n - 6),
         }
     }
 }
@@ -119,6 +125,8 @@ impl FromStr for Register {
             "rip" => Ok(Self::RIP),
             "rint" => Ok(Self::RINT),
             "flags" => Ok(Self::Flags),
+            "rsb" => Ok(Self::RSB),
+            "rsh" => Ok(Self::RSH),
             "r0" => Ok(Self::r0()),
             "rb0" => Ok(Self::rb0()),
             "r1" => Ok(Self::r1()),
@@ -139,10 +147,6 @@ impl FromStr for Register {
             "rb8" => Ok(Self::rb8()),
             "r9" => Ok(Self::r9()),
             "rb9" => Ok(Self::rb9()),
-            "r10" => Ok(Self::r10()),
-            "rb10" => Ok(Self::rb10()),
-            "r11" => Ok(Self::r11()),
-            "rb11" => Ok(Self::rb11()),
             _ => Err(Error::InvalidRegister(s.to_string())),
         }
     }
@@ -156,6 +160,8 @@ impl std::fmt::Debug for Register {
             RIP => write!(f, "RIP"),
             RINT => write!(f, "RINT"),
             Flags => write!(f, "Flags"),
+            RSB => write!(f, "RSB"),
+            RSH => write!(f, "RSH"),
             R(width, number) => {
                 let middle = match width {
                     Width::Byte => "b",
@@ -179,7 +185,7 @@ mod test {
 
     #[test]
     fn compile_from_src() {
-        for r in vec![Register::RINFO, Register::RIP, Register::RIP, Register::Flags, Register::r0(), Register::r1(), Register::r2(), Register::r3(), Register::r4(), Register::r5(), Register::r6(), Register::r7(), Register::r8(), Register::r9(), Register::r10(), Register::r11()] {
+        for r in vec![Register::RINFO, Register::RIP, Register::RIP, Register::Flags, Register::RSB, Register::RSH, Register::r0(), Register::r1(), Register::r2(), Register::r3(), Register::r4(), Register::r5(), Register::r6(), Register::r7(), Register::r8(), Register::r9(), Register::rb0(), Register::rb1(), Register::rb2(), Register::rb3(), Register::rb4(), Register::rb5(), Register::rb6(), Register::rb7(), Register::rb8(), Register::rb9()] {
             let src = r.compile_src();
             assert_eq!(Register::from_src(r.width(), src), r);
         }
@@ -187,7 +193,7 @@ mod test {
 
     #[test]
     fn from_str() {
-        for r in vec![Register::RINFO, Register::RIP, Register::RIP, Register::Flags, Register::r0(), Register::r1(), Register::r2(), Register::r3(), Register::r4(), Register::r5(), Register::r6(), Register::r7(), Register::r8(), Register::r9(), Register::r10(), Register::r11(), Register::rb0(), Register::rb1(), Register::rb2(), Register::rb3(), Register::rb4(), Register::rb5(), Register::rb6(), Register::rb7(), Register::rb8(), Register::rb9(), Register::rb10(), Register::rb11()] {
+        for r in vec![Register::RINFO, Register::RIP, Register::RIP, Register::Flags, Register::RSB, Register::RSH, Register::r0(), Register::r1(), Register::r2(), Register::r3(), Register::r4(), Register::r5(), Register::r6(), Register::r7(), Register::r8(), Register::r9(), Register::rb0(), Register::rb1(), Register::rb2(), Register::rb3(), Register::rb4(), Register::rb5(), Register::rb6(), Register::rb7(), Register::rb8(), Register::rb9()] {
             assert_eq!(Register::from_str(&r.to_string()), Ok(r));
         }
     }

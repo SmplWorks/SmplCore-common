@@ -21,6 +21,8 @@ impl Instruction {
 
             AJmp(reg) | Jmp(reg)
                 => vec![self.opcode(), reg.compile_src()],
+
+            _ => todo!("{self:?}")
         }
     }
 }
