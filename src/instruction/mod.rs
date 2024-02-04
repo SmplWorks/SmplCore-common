@@ -215,24 +215,33 @@ impl Instruction {
     pub fn is_valid(&self) -> bool {
         use Instruction::*;
         match self {
-            Nop => true,
+            Nop | Not(_) | Ret | Cli => true,
             DB(_) => true, // TODO: Should this always be true?
 
             MovM2R(src, dest) => src.width() == Width::Word && dest.width() == Width::Byte && dest.is_writable(),
             MovR2M(src, dest) => src.width() == Width::Byte && dest.width() == Width::Word && dest.is_writable(),
 
             MovR2R(src, dest) |
-            AddR2R(src, dest) | SubR2R(src, dest)
+            AddR2R(src, dest) | SubR2R(src, dest) | AndR2R(src, dest) | OrR2R(src, dest) | CmpR2R(src, dest)
                 => src.width() == dest.width() && dest.is_writable(),
 
             MovC2R(value, dest) |
-            AddC2R(value, dest) | SubC2R(value, dest)
+            AddC2R(value, dest) | SubC2R(value, dest) | AndC2R(value, dest) | OrC2R(value, dest) | CmpC2R(value, dest) 
                 => value.width() == dest.width() && dest.is_writable(),
 
-            AJmp(reg) | Jmp(reg)
+            CallC(value)
+                => value.width() == Width::Word,
+
+            Push(reg) | Pop(reg) |
+            AJmp(reg) | Jmp(reg) | Jeq(reg) | Jneq(reg) | Jlt(reg) | Jgt(reg) | Jleq(reg) | Jgeq(reg) | Jo(reg) | Jno(reg) |
+            CallR(reg) | Int(reg) | Sti(reg)
                 => reg.width() == Width::Word,
 
-            _ => todo!("{self:?}")
+            Shl(shift, reg)| Shr(shift, reg) | Shre(shift, reg)
+                => match reg.width() {
+                    Width::Byte => shift.value_byte(0) <= 8,
+                    Width::Word => shift.value_byte(0) <= 16,
+                }
         }
     }
 
