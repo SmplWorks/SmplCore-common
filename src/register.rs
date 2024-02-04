@@ -1,4 +1,6 @@
-use crate::utils::{Error, Result};
+use std::str::FromStr;
+
+use crate::utils::Error;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Width {
@@ -57,40 +59,6 @@ impl Register {
     r_const!(rb11, Byte, 11);
     r_const!(r11, Word, 11);
 
-    pub fn from_str(s : &str) -> Result<Self> {
-        match &*s.to_lowercase() {
-            "rinfo" => Ok(Self::RINFO),
-            "rip" => Ok(Self::RIP),
-            "rint" => Ok(Self::RINT),
-            "flags" => Ok(Self::Flags),
-            "r0" => Ok(Self::r0()),
-            "rb0" => Ok(Self::rb0()),
-            "r1" => Ok(Self::r1()),
-            "rb1" => Ok(Self::rb1()),
-            "r2" => Ok(Self::r2()),
-            "rb2" => Ok(Self::rb2()),
-            "r3" => Ok(Self::r3()),
-            "rb3" => Ok(Self::rb3()),
-            "r4" => Ok(Self::r4()),
-            "rb4" => Ok(Self::rb4()),
-            "r5" => Ok(Self::r5()),
-            "rb5" => Ok(Self::rb5()),
-            "r6" => Ok(Self::r6()),
-            "rb6" => Ok(Self::rb6()),
-            "r7" => Ok(Self::r7()),
-            "rb7" => Ok(Self::rb7()),
-            "r8" => Ok(Self::r8()),
-            "rb8" => Ok(Self::rb8()),
-            "r9" => Ok(Self::r9()),
-            "rb9" => Ok(Self::rb9()),
-            "r10" => Ok(Self::r10()),
-            "rb10" => Ok(Self::rb10()),
-            "r11" => Ok(Self::r11()),
-            "rb11" => Ok(Self::rb11()),
-            _ => Err(Error::InvalidRegister(s.to_string())),
-        }
-    }
-
     pub fn width(&self) -> Width {
         use Register::*;
         match self {
@@ -142,6 +110,44 @@ impl Register {
     }
 }
 
+impl FromStr for Register {
+    type Err = Error;
+
+    fn from_str(s : &str) -> std::result::Result<Self, Self::Err> {
+        match &*s.to_lowercase() {
+            "rinfo" => Ok(Self::RINFO),
+            "rip" => Ok(Self::RIP),
+            "rint" => Ok(Self::RINT),
+            "flags" => Ok(Self::Flags),
+            "r0" => Ok(Self::r0()),
+            "rb0" => Ok(Self::rb0()),
+            "r1" => Ok(Self::r1()),
+            "rb1" => Ok(Self::rb1()),
+            "r2" => Ok(Self::r2()),
+            "rb2" => Ok(Self::rb2()),
+            "r3" => Ok(Self::r3()),
+            "rb3" => Ok(Self::rb3()),
+            "r4" => Ok(Self::r4()),
+            "rb4" => Ok(Self::rb4()),
+            "r5" => Ok(Self::r5()),
+            "rb5" => Ok(Self::rb5()),
+            "r6" => Ok(Self::r6()),
+            "rb6" => Ok(Self::rb6()),
+            "r7" => Ok(Self::r7()),
+            "rb7" => Ok(Self::rb7()),
+            "r8" => Ok(Self::r8()),
+            "rb8" => Ok(Self::rb8()),
+            "r9" => Ok(Self::r9()),
+            "rb9" => Ok(Self::rb9()),
+            "r10" => Ok(Self::r10()),
+            "rb10" => Ok(Self::rb10()),
+            "r11" => Ok(Self::r11()),
+            "rb11" => Ok(Self::rb11()),
+            _ => Err(Error::InvalidRegister(s.to_string())),
+        }
+    }
+}
+
 impl std::fmt::Debug for Register {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         use Register::*;
@@ -181,7 +187,7 @@ mod test {
 
     #[test]
     fn from_str() {
-        for r in vec![Register::RINFO, Register::RIP, Register::RIP, Register::Flags, Register::r0(), Register::r1(), Register::r2(), Register::r3(), Register::r4(), Register::r5(), Register::r6(), Register::r7(), Register::r8(), Register::r9(), Register::r10(), Register::r11()] {
+        for r in vec![Register::RINFO, Register::RIP, Register::RIP, Register::Flags, Register::r0(), Register::r1(), Register::r2(), Register::r3(), Register::r4(), Register::r5(), Register::r6(), Register::r7(), Register::r8(), Register::r9(), Register::r10(), Register::r11(), Register::rb0(), Register::rb1(), Register::rb2(), Register::rb3(), Register::rb4(), Register::rb5(), Register::rb6(), Register::rb7(), Register::rb8(), Register::rb9(), Register::rb10(), Register::rb11()] {
             assert_eq!(Register::from_str(&r.to_string()), Ok(r));
         }
     }

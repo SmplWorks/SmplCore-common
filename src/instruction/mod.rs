@@ -146,6 +146,8 @@ impl Instruction {
         }
     }
 
+
+    #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> u16 {
         use Instruction::*;
         match self {
@@ -165,7 +167,6 @@ impl Instruction {
 }
 
 mod compile;
-pub use compile::*;
 
 #[cfg(test)]
 mod test;
