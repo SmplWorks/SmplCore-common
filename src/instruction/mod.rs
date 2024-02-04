@@ -266,19 +266,43 @@ impl Instruction {
             MovR2R(src, _) => case!(src, 0x03),
             MovM2R(_, _) => 0x05,
             MovR2M(_, _) => 0x06,
+            Push(_) => 0x07,
+            Pop(_) => 0x08,
 
-            AddC2R(src, _) => case!(src, 0x07),
-            AddR2R(src, _) => case!(src, 0x09),
-            SubC2R(src, _) => case!(src, 0x0B),
-            SubR2R(src, _) => case!(src, 0x0D),
+            AddC2R(src, _) => case!(src, 0x09),
+            AddR2R(src, _) => case!(src, 0x0B),
+            SubC2R(src, _) => case!(src, 0x0D),
+            SubR2R(src, _) => case!(src, 0x0F),
+            Not(dest) => case!(dest, 0x11),
+            AndC2R(src, _) => case!(src, 0x13),
+            AndR2R(src, _) => case!(src, 0x15),
+            OrC2R(src, _) => case!(src, 0x17),
+            OrR2R(src, _) => case!(src, 0x19),
+            Shl(_, dest) => case!(dest, 0x1B),
+            Shr(_, dest) => case!(dest, 0x1D),
+            Shre(_, dest) => case!(dest, 0x1F),
+            CmpC2R(src, _) => case!(src, 0x21),
+            CmpR2R(src, _) => case!(src, 0x23),
 
-            AJmp(_) => 0x0F,
-            Jmp(_) => 0x10,
+            AJmp(_) => 0x25,
+            Jmp(_) => 0x26,
+            Jeq(_) => 0x27,
+            Jneq(_) => 0x28,
+            Jlt(_) => 0x29,
+            Jgt(_) => 0x2A,
+            Jleq(_) => 0x2B,
+            Jgeq(_) => 0x2C,
+            Jo(_) => 0x2D,
+            Jno(_) => 0x2E,
+            CallC(_) => 0x2F,
+            CallR(_) => 0x30,
+            Ret => 0x31,
 
-            _ => todo!("{self:?}")
+            Int(_) => 0x32,
+            Sti(_) => 0x33,
+            Cli => 0x34,
         }
     }
-
 
     #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> u16 {

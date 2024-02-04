@@ -65,6 +65,18 @@ check_widths_case!(check_widths_subr2r, subr2r, SubR2R);
 
 #[test]
 fn all_different_opcodes() {
+    macro_rules! b {
+        ($ident:ident) => {
+            Instruction::$ident(Register::rb0()).unwrap()
+        };
+    }
+
+    macro_rules! w {
+        ($ident:ident) => {
+            Instruction::$ident(Register::r0()).unwrap()
+        };
+    }
+
     macro_rules! cb2b {
         ($ident:ident) => {
             Instruction::$ident(Value::byte(0), Register::rb1()).unwrap()
@@ -99,6 +111,8 @@ fn all_different_opcodes() {
         w2w!(movr2r),
         Instruction::movm2r(Register::r0(), Register::rb1()).unwrap(),
         Instruction::movr2m(Register::rb0(), Register::r1()).unwrap(),
+        w!(push),
+        w!(pop),
 
         cb2b!(addc2r),
         cw2w!(addc2r),
@@ -108,9 +122,43 @@ fn all_different_opcodes() {
         cw2w!(subc2r),
         b2b!(subr2r),
         w2w!(subr2r),
+        b!(not),
+        w!(not),
+        cb2b!(andc2r),
+        cw2w!(andc2r),
+        b2b!(andr2r),
+        w2w!(andr2r),
+        cb2b!(orc2r),
+        cw2w!(orc2r),
+        b2b!(orr2r),
+        w2w!(orr2r),
+        cb2b!(shl),
+        cw2w!(shl),
+        cb2b!(shr),
+        cw2w!(shr),
+        cb2b!(shre),
+        cw2w!(shre),
+        cb2b!(cmpc2r),
+        cw2w!(cmpc2r),
+        b2b!(cmpr2r),
+        w2w!(cmpr2r),
 
-        Instruction::ajmp(Register::r0()).unwrap(),
-        Instruction::jmp(Register::r0()).unwrap(),
+        w!(ajmp),
+        w!(jmp),
+        w!(jeq),
+        w!(jneq),
+        w!(jlt),
+        w!(jgt),
+        w!(jleq),
+        w!(jgeq),
+        w!(jo),
+        w!(jno),
+        Instruction::callc(Value::word(0)).unwrap(),
+        w!(callr),
+        Instruction::Ret,
+        w!(int), 
+        w!(sti), 
+        Instruction::Cli,
     ];
 
     for inst0 in all.iter() {
