@@ -85,7 +85,7 @@ check_width_r2r!(check_width_movr2r, movr2r, MovR2R);
 #[test]
 fn check_width_movm2r() {
     check_width_r2r_ok!(movm2r, r0, rb1);
-    check_width_r2r_err!(movm2r, MovM2R, r0, r1);
+    check_width_r2r_ok!(movm2r, r0, r1);
     check_width_r2r_err!(movm2r, MovM2R, rb0, rb1);
     check_width_r2r_err!(movm2r, MovM2R, rb0, r1);
 }
@@ -93,7 +93,7 @@ fn check_width_movm2r() {
 #[test]
 fn check_width_movr2m() {
     check_width_r2r_ok!(movr2m, rb0, r1);
-    check_width_r2r_err!(movr2m, MovR2M, r0, r1);
+    check_width_r2r_ok!(movr2m, r0, r1);
     check_width_r2r_err!(movr2m, MovR2M, rb0, rb1);
     check_width_r2r_err!(movr2m, MovR2M, r0, rb1);
 }

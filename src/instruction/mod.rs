@@ -218,8 +218,8 @@ impl Instruction {
             Nop | Not(_) | Ret | Cli => true,
             DB(_) => true, // TODO: Should this always be true?
 
-            MovM2R(src, dest) => src.width() == Width::Word && dest.width() == Width::Byte && dest.is_writable(),
-            MovR2M(src, dest) => src.width() == Width::Byte && dest.width() == Width::Word && dest.is_writable(),
+            MovM2R(src, dest) => src.width() == Width::Word && dest.is_writable(),
+            MovR2M(_, dest) => dest.width() == Width::Word,
 
             MovR2R(src, dest) |
             AddR2R(src, dest) | SubR2R(src, dest) | AndR2R(src, dest) | OrR2R(src, dest) | CmpR2R(src, dest)
