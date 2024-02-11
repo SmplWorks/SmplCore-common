@@ -185,7 +185,9 @@ fn all_different_opcodes() {
         b2b!(movr2r),
         w2w!(movr2r),
         Instruction::movm2r(Register::r0(), Register::rb1()).unwrap(),
+        Instruction::movm2r(Register::r0(), Register::r1()).unwrap(),
         Instruction::movr2m(Register::rb0(), Register::r1()).unwrap(),
+        Instruction::movr2m(Register::r0(), Register::r1()).unwrap(),
         w!(push),
         w!(pop),
 
